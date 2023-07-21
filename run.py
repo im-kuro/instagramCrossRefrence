@@ -3,7 +3,7 @@
 import toolkit, helpers
 # non local
 from instagrapi import Client, exceptions
-import requests, json
+import requests, json, os
 
 
 def main(tarUsername: str) -> bool:
@@ -11,9 +11,22 @@ def main(tarUsername: str) -> bool:
 	
 	# get target account info (dict)
 	tarInfo = toolkitObj.getAccountInfo(tarUsername)
-	print(tarInfo)
-	helpersObj.Default.printInfo(f"Target account info => {tarInfo['username']}\nUser PK => {tarInfo['pk']}\nUser is private => {tarInfo['is_private']}\nMedia Count => {tarInfo['media_count']}\nFollower Count => {tarInfo['follower_count']}\nFollowing Count => {tarInfo['following_count']}\n\n")
+	# print target account info
+	helpersObj.Default.printArgsInfo(Target_Username=tarInfo.username, Target_PK=tarInfo.pk, Target_Followers=tarInfo.follower_count, Target_Following=tarInfo.following_count)
 
+	# start extracting data (followers/following/posts likers)
+
+
+
+
+	# compare data to see if the account is real or not
+ 
+
+
+
+	# give rating on how real the account is
+ 
+ 
 
 
 
@@ -21,9 +34,22 @@ def main(tarUsername: str) -> bool:
 
 
 if __name__ == '__main__':
+    # check for os type to clear past output
+	if os.name == 'nt':
+		os.system('cls')
+	else:
+		os.system('clear')
+
+	######## objects #########
+	##########################
+	# init wrapper
+	clientObj = Client()
     # mainly for input/output
 	helpersObj = helpers.IOFuncs()
- 
+	# i init the toolkit here because we need the account obj to be passed in (yes im sure theres a better way to do this)
+	toolkitObj = toolkit.tools(clientObj)
+
+	
 	# banner and other bullshit
 	print(helpersObj.Default.banner)
 	helpersObj.Default.printInfo("Welcome to Kuro's Instagram cross refrence tool!")
@@ -32,10 +58,7 @@ if __name__ == '__main__':
  
  	# get target username
 	target = helpersObj.Default.getTextInput("Enter the target username you want info on")
- 
-	# login and init wrapper
-	clientObj = Client()
-	
+
 	# check if we have a session saved | if not, get account info | 
 	if json.loads(open("sessions.json").read())["settingsDict"] == {}:
 		# get account info
@@ -43,45 +66,20 @@ if __name__ == '__main__':
 		ACCOUNT_PASSWORD = helpersObj.Default.getPassword("Enter your password")
 		# log in
 		clientObj.login(ACCOUNT_USERNAME, ACCOUNT_PASSWORD)
-	# else load session to login
-	
+  
+  
+		if helpersObj.Default.getUserInput("Do you want to save your session (you can login without needing to input your user & pass)").lower() == "y":
+			# Save the settings session to login faster in the future
+			if toolkitObj.saveToFile("settingsDict", clientObj.settings) == True:
+				helpersObj.Default.printInfo("Saved settings to file!")
+			else: helpersObj.Default.printError(f"Failed to save settings to file! Error: {toolkitObj.saveToFile('settingsDict', clientObj.settings())}")
+		else: helpersObj.Default.printInfo("Not saving settings to file!")
+	# else load session to login 
 	else: 
-		print(json.loads(open("sessions.json").read())["settingsDict"])
-		Client.set_settings(settings={
-        "settingsDict": {
-			"timezone_offset": -14400,
-			"device_settings": {
-				"app_version": "269.0.0.18.75",
-				"android_version": 26,
-				"android_release": "8.0.0",
-				"dpi": "480dpi",
-				"resolution": "1080x1920",
-				"manufacturer": "OnePlus",
-				"device": "devitron",
-				"model": "6T Dev",
-				"cpu": "qcom",
-				"version_code": "314665256"
-			},
-			"user_agent": "Instagram 269.0.0.18.75 Android (26/8.0.0; 480dpi; 1080x1920; OnePlus; 6T Dev; devitron; qcom; en_US; 314665256)",
-			"uuids": {},
-			"locale": "en_US",
-			"country": "US",
-			"country_code": 1,
-			"ig_u_rur": "null",
-			"ig_www_claim": "null"
-			}})
+		# load session
+		clientObj.set_settings(json.loads(open("sessions.json").read())["settingsDict"])
 	
 
-	# i init the toolkit here because we need the account obj to be passed in
-	toolkitObj = toolkit.tools(clientObj)
-	
-	if helpersObj.Default.getUserInput("Do you want to save your session (you can login without needing to input your user & pass)").lower() == "y":
-		# Save the settings session to login faster in the future
-		if toolkitObj.saveToFile("settingsDict", clientObj.settings) == True:
-			helpersObj.Default.printInfo("Saved settings to file!")
-		else: helpersObj.Default.printError(f"Failed to save settings to file! Error: {toolkitObj.saveToFile('settingsDict', clientObj.settings())}")
-	else: helpersObj.Default.printInfo("Not saving settings to file!")
-	
 	try:
 		# start main func
 		main(target)
