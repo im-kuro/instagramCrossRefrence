@@ -8,7 +8,7 @@ class tools():
 
     # INSTA STUFF
 	def getAccountInfo(self, username: str) -> dict:
-		return self.clientObj.account_info().dict()
+		return self.clientObj.user_info_by_username(username)
 		
   
   
@@ -49,3 +49,8 @@ class tools():
 
 	def sessionSetup(self):
 		pass
+
+
+	def TFAHandler(self):
+		pass
+		# https://github.com/adw0rd/instagrapi - > additional ex.

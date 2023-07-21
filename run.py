@@ -7,13 +7,12 @@ import requests, json
 
 
 def main(tarUsername: str) -> bool:
-
 	helpersObj.Default.printInfo(f"Gathering target account info => {tarUsername}")
 	
- 
 	# get target account info (dict)
 	tarInfo = toolkitObj.getAccountInfo(tarUsername)
-
+	print(tarInfo)
+	helpersObj.Default.printInfo(f"Target account info => {tarInfo['username']}\nUser PK => {tarInfo['pk']}\nUser is private => {tarInfo['is_private']}\nMedia Count => {tarInfo['media_count']}\nFollower Count => {tarInfo['follower_count']}\nFollowing Count => {tarInfo['following_count']}\n\n")
 
 
 
@@ -42,14 +41,41 @@ if __name__ == '__main__':
 		# get account info
 		ACCOUNT_USERNAME = helpersObj.Default.getTextInput("Enter your username")
 		ACCOUNT_PASSWORD = helpersObj.Default.getPassword("Enter your password")
+		# log in
 		clientObj.login(ACCOUNT_USERNAME, ACCOUNT_PASSWORD)
-	else: Client.set_settings(json.loads(open("sessions.json").read())["settingsDict"])
- 
+	# else load session to login
+	
+	else: 
+		print(json.loads(open("sessions.json").read())["settingsDict"])
+		Client.set_settings(settings={
+        "settingsDict": {
+			"timezone_offset": -14400,
+			"device_settings": {
+				"app_version": "269.0.0.18.75",
+				"android_version": 26,
+				"android_release": "8.0.0",
+				"dpi": "480dpi",
+				"resolution": "1080x1920",
+				"manufacturer": "OnePlus",
+				"device": "devitron",
+				"model": "6T Dev",
+				"cpu": "qcom",
+				"version_code": "314665256"
+			},
+			"user_agent": "Instagram 269.0.0.18.75 Android (26/8.0.0; 480dpi; 1080x1920; OnePlus; 6T Dev; devitron; qcom; en_US; 314665256)",
+			"uuids": {},
+			"locale": "en_US",
+			"country": "US",
+			"country_code": 1,
+			"ig_u_rur": "null",
+			"ig_www_claim": "null"
+			}})
+	
 
 	# i init the toolkit here because we need the account obj to be passed in
 	toolkitObj = toolkit.tools(clientObj)
 	
-	if helpersObj.Default.getTextInput("Do you want to save your session (you can login without needing to input your user & pass)").lower() == "y":
+	if helpersObj.Default.getUserInput("Do you want to save your session (you can login without needing to input your user & pass)").lower() == "y":
 		# Save the settings session to login faster in the future
 		if toolkitObj.saveToFile("settingsDict", clientObj.settings) == True:
 			helpersObj.Default.printInfo("Saved settings to file!")

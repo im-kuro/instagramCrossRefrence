@@ -1,2 +1,0 @@
-ACCOUNT_USERNAME = "alumiatestbot"
-ACCOUNT_PASSWORD = "2345245fwefewe212"
