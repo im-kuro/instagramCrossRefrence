@@ -41,7 +41,7 @@ class tools():
 			jsonDBObj = json.loads(open("sessions.json").read())
 			jsonDBObj[path] = data
 			# write changes to master database
-			with open("sessions.json", "w") as masterDatabaseFile:
+			with open("Utils/sessions.json", "w") as masterDatabaseFile:
 				masterDatabaseFile.write(json.dumps(jsonDBObj, indent=4))
 			return True
 		except Exception as e:
