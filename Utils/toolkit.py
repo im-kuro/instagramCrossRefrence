@@ -19,7 +19,6 @@ class tools():
 	# MISC STUFF
  
 	def saveToFile(self, path: str, data) -> bool:
-
 		try:
 			# Save data to file
 			jsonDBObj = json.loads(open("Utils/sessions.json").read())
@@ -94,7 +93,6 @@ class tools():
   
  
 	# Main funcs
- 
 
 	def crossRefrenceAccounts(self, targetPK: str) -> json:
 		"""This will get followers & following to return the target's mutuals
@@ -108,20 +106,28 @@ class tools():
 		self.helpersObj.Default.printInfo(f"Please be patient, if the target has a lot of followers/following this could take 1-5 mins.")
 		# get followers and following based on the count, we do this to lower api calls (hopefully idk lol)
 		userFollowers = self.clientObj.user_followers_gql_chunk(targetPK)
-		time.sleep(random.randint(30, 45))
+  
+		time.sleep(random.randint(25, 40))
+  
 		userFollowing = self.clientObj.user_following_v1(targetPK)
-		
+		mutualCount = -1
 		jsonRes = {}
+  
 		# Assuming you have a list of users being followed stored in 'userFollowing'
 		# Replace 'userFollowing' with the actual variable name containing the list of users being followed.
 		userFollowing_usernames = [user.username for user in userFollowing]
-
+  
 		# Check if the target is following any of their followers
 		for follower in userFollowers[0]:
 			if follower.username in userFollowing_usernames:
+				mutualCount += 1
 				jsonRes[follower.username] = {"isMutuals": True}
-				self.helpersObj.Default.printSuccess(f"{follower.username} is friends with the target")
-			
+				
+				self.helpersObj.Default.printSuccess(f"found {mutualCount} mutual accounts!")
+				time.sleep(0.10) # this is purly for looks lmao
+				print ("\033[A\033[A")
+
+				
 		return jsonRes
 
 
