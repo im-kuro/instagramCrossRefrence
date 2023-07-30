@@ -10,6 +10,7 @@ argParser = argparse.ArgumentParser(description='Instagram cross refrence tool')
 
 argParser.add_argument('-f', '--fix', help='fix any issues with the session, if you run into any API errors or somthing thats isnt handled in the code you can run with -f/--fix to fix any possible issues', action='store_true')
 argParser.add_argument('-a', '--savedAccount', help='show the account that is currently saved in the sessions', action='store_true')
+argParser.add_argument('-p', '--proxy', help='pass in a porxy you want to send the requests through. (<ip>/<port>/<username>/<pass>)')
 
 parsedArgObj = argParser.parse_args()
 
@@ -72,6 +73,8 @@ if __name__ == '__main__':
 	helpersObj.Default.printInfo("Welcome to Kuro's Instagram cross refrence tool!")
 	helpersObj.Default.printInfo("This tool will allow you to cross refrence a target's followers, following, and posts to see how real an account is")
 
+
+
 	# check if sessions need to be fixed
 	if parsedArgObj.fix:
 		helpersObj.Default.printInfo("Fixing session...")
@@ -84,9 +87,18 @@ if __name__ == '__main__':
 		savedUsername = toolkitObj.__getSavedAccount__()
 		if savedUsername != "": helpersObj.Default.printInfo(f"Saved account: {savedUsername}"); exit(0)
 		else: helpersObj.Default.printError(f"There is no saved account!"); exit(0)
-		
-
- 
+  
+	# handle proxy if passed in
+	if parsedArgObj.proxy:
+		ip, port, username, password = parsedArgObj.proxy.split(":")
+		proxyString = f"http://{username}:{password}@{ip}:{port}"
+		beforeIp = clientObj._send_public_request("https://api.ipify.org/")
+		clientObj.set_proxy(proxyString)
+		afterIp = clientObj._send_public_request("https://api.ipify.org/")
+		if beforeIp != afterIp: helpersObj.Default.printSuccess(f"Proxy set to {ip}:{port}")
+  
+  
+  
  	# get target username
 	target = helpersObj.Default.getTextInput("Enter the target username you want info on")
 
@@ -98,11 +110,11 @@ if __name__ == '__main__':
 		main(target)
 	except exceptions.BadPassword: helpersObj.Default.printError("Bad password!")
 	except exceptions.ClientNotFoundError: helpersObj.Default.printError("The username used to login was not found!")
-	except exceptions.ChallengeRequired: helpersObj.Default.printError("Challenge error! Please log in o the web and try again.")
+	except exceptions.ChallengeRequired: helpersObj.Default.printError("Challenge error! Please log in on the web and try again.")
 	except requests.exceptions.HTTPError: helpersObj.Default.printError("Request error! Could be any issue with the request. Please log in on the web to see any possible issues.")
 	except exceptions.ChallengeUnknownStep: helpersObj.Default.printError("Challenge error! Please log in on the web and try again.")
 	except exceptions.UserNotFound: helpersObj.Default.printError("Username not found! Please enter a valid username.")
-	except Exception as e: helpersObj.Default.printError(f"Unknown error! ERROR: {e}")
+	#except Exception as e: helpersObj.Default.printError(f"Unknown error! ERROR: {e}")
 
 
 
