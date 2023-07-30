@@ -4,10 +4,12 @@ import Utils.toolkit as toolkit, Utils.helpers as helpers
 # non local
 from instagrapi import Client, exceptions
 import requests, os, time, random, argparse
+from colorama import Fore
 
 argParser = argparse.ArgumentParser(description='Instagram cross refrence tool')
 
 argParser.add_argument('-f', '--fix', help='fix any issues with the session, if you run into any API errors or somthing thats isnt handled in the code you can run with -f/--fix to fix any possible issues', action='store_true')
+argParser.add_argument('-a', '--savedAccount', help='show the account that is currently saved in the sessions', action='store_true')
 
 parsedArgObj = argParser.parse_args()
 
@@ -23,27 +25,29 @@ def main(tarUsername: str) -> bool:
 	toolkitObj.handlePrivateStatus(tarInfo)
  
  	# sleep to avoid ratelimit
-	time.sleep(random.randint(10, 30))
+	time.sleep(random.randint(10, 15))
 
-	# find mutals
-	mutuals = toolkitObj.crossRefrenceAccounts(tarInfo.pk)
-	exit(0)
- 
-	time.sleep(random.randint(15, 30))
-	tarPosts = toolkitObj.gatherPosts(tarInfo.pk)
-	print(tarPosts)
-
-	time.sleep(random.randint(15, 30))
-
+	# find mutals | 25 points
+	mutuals = toolkitObj.crossReferenceAccounts(tarInfo.pk)
 	
-	# compare data to see if the account is real or not
+	time.sleep(random.randint(10, 15))
+ 
+	# cross refrence likers of posts & tags in thoes posts | 25 points
+	tarPostLikers = toolkitObj.crossReferencePostsLikers(tarInfo.pk, mutuals)
+	print(tarPostLikers)
 
+	# cross refrence tags | 25 points
+
+
+
+	# pharse accounts bio & hashtags for info & checking for common last names | 25 points
+ 
+ 
 
 	# give rating on how real the account is
-	helpersObj.Default.printSuccess(f"Target account rating: {accsRes + postsRes}")
-
-
-
+	#rating = mutuals["rate"] + tarPostLikers["rate"]
+	#print(Fore.YELLOW + f"[Result] This account is most likely fake, if there where any mutuals found you can manually check them and the leads. {Fore.RED}RATING: {rating}% ")
+	#elif x+z+y+q >= 50:
 
 
 
@@ -75,6 +79,12 @@ if __name__ == '__main__':
 			helpersObj.Default.printSuccess("Session fixed! You can now log in again.")
 		else: helpersObj.Default.printError(f"Session error! Unable to fix session.")
 		
+	# check if we have a saved account to print username
+	if parsedArgObj.savedAccount:
+		savedUsername = toolkitObj.__getSavedAccount__()
+		if savedUsername != "": helpersObj.Default.printInfo(f"Saved account: {savedUsername}"); exit(0)
+		else: helpersObj.Default.printError(f"There is no saved account!"); exit(0)
+		
 
  
  	# get target username
@@ -91,6 +101,7 @@ if __name__ == '__main__':
 	except exceptions.ChallengeRequired: helpersObj.Default.printError("Challenge error! Please log in o the web and try again.")
 	except requests.exceptions.HTTPError: helpersObj.Default.printError("Request error! Could be any issue with the request. Please log in on the web to see any possible issues.")
 	except exceptions.ChallengeUnknownStep: helpersObj.Default.printError("Challenge error! Please log in on the web and try again.")
+	except exceptions.UserNotFound: helpersObj.Default.printError("Username not found! Please enter a valid username.")
 	except Exception as e: helpersObj.Default.printError(f"Unknown error! ERROR: {e}")
 
 

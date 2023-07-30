@@ -13,6 +13,7 @@ class tools():
 
 	def getAccountInfo(self, username: str) -> dict:
 		return self.clientObj.user_info_by_username(username)
+
 	def followUser(self, pk: str) -> bool: 
 		return self.clientObj.user_follow(pk)
 
@@ -30,8 +31,12 @@ class tools():
 		except Exception as e:
 			return e
 
+	def __getSavedAccount__(self) -> str:
+		try:
+			return json.loads(open("Utils/sessions.json").read())["username"]
+		except Exception as e:
+			return e
 
-  
 	def __fix__(self) -> bool:
 		"""This can be ran by runningn with -f to fix any possible issues with the tool
 
@@ -94,7 +99,7 @@ class tools():
  
 	# Main funcs
 
-	def crossRefrenceAccounts(self, targetPK: str) -> json:
+	def crossReferenceAccounts(self, targetPK: str) -> json:
 		"""This will get followers & following to return the target's mutuals
 
 		Args:
@@ -107,10 +112,10 @@ class tools():
 		# get followers and following based on the count, we do this to lower api calls (hopefully idk lol)
 		userFollowers = self.clientObj.user_followers_gql_chunk(targetPK)
   
-		time.sleep(random.randint(25, 40))
+		time.sleep(random.randint(5, 20))
   
 		userFollowing = self.clientObj.user_following_v1(targetPK)
-		mutualCount = -1
+		mutualCount = 0
 		jsonRes = {}
   
 		# Assuming you have a list of users being followed stored in 'userFollowing'
@@ -121,18 +126,54 @@ class tools():
 		for follower in userFollowers[0]:
 			if follower.username in userFollowing_usernames:
 				mutualCount += 1
-				jsonRes[follower.username] = {"isMutuals": True}
+				jsonRes[follower.username] = {"MutualUsername": follower.username,"isMutuals": True}
 				
 				self.helpersObj.Default.printSuccess(f"found {mutualCount} mutual accounts!")
-				time.sleep(0.10) # this is purly for looks lmao
+				time.sleep(0.10) # this is purely for looks lmao
 				print ("\033[A\033[A")
+		print("\n")
 
-				
-		return jsonRes
+		return {"mutuals": jsonRes, "mutualCount": mutualCount}
 
 
-	def crossRefrencePostsLikers(self) -> json:
-		pass
+
+
+	def crossReferencePostsLikers(self, targetPK: str, tarMutuals: str) -> json:
+		jsonRes = {}
+		mutualLikerCount = 0
+		targetMedias = self.clientObj.user_medias_gql(targetPK, 5)
+  
+		if targetMedias == []:
+			self.helpersObj.Default.printSuccess(f"No posts found. Exiting...")
+			exit(0)
+
+		userTagsRes = {}
+		for media in targetMedias:
+			for mediaTag in media.usertags:
+				userTagsRes[mediaTag.username] = {"userPK": mediaTag.pk, "mediaPK": mediaTag.pk}
+   
+		for media in targetMedias:
+			time.sleep(random.randint(5, 10)) # this is purly for looks lmao
+			likers = self.clientObj.media_likers(media.pk)
+			for liker in likers:
+				for mutual in tarMutuals["mutuals"]:
+
+					if liker.username in mutual:
+						jsonRes[liker.username] = {"mediaPK": media.pk, "mutualLikerPK": liker.pk}
+      
+						mutualLikerCount += 1
+						self.helpersObj.Default.printSuccess(f"found {mutualLikerCount} mutuals that liked the post!")
+						time.sleep(0.10) # this is purly for looks lmao
+						print ("\033[A\033[A")
+		print("\n")
+
+		return {"mutualLikers": jsonRes, "mutualLikerCount": mutualLikerCount, "userTags":userTagsRes}
+
+
+
+
+
+
 
 
 
