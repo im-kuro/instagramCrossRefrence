@@ -92,10 +92,7 @@ class tools():
 			return True
 
 
-	def TFAHandler(self):
-		pass
-		# https://github.com/adw0rd/instagrapi - > additional ex.
-  
+
  
 	# Main funcs
 
@@ -111,8 +108,8 @@ class tools():
 		self.helpersObj.Default.printInfo(f"Please be patient, if the target has a lot of followers/following this could take 1-5 mins.")
 		# get followers and following based on the count, we do this to lower api calls (hopefully idk lol)
 		userFollowers = self.clientObj.user_followers_gql_chunk(targetPK)
-  
-		time.sleep(random.randint(5, 20))
+
+		time.sleep(random.randint(10, 30))
   
 		userFollowing = self.clientObj.user_following_v1(targetPK)
 		mutualCount = 0
@@ -126,10 +123,11 @@ class tools():
 		for follower in userFollowers[0]:
 			if follower.username in userFollowing_usernames:
 				mutualCount += 1
-				jsonRes[follower.username] = {"MutualUsername": follower.username,"isMutuals": True}
-				
+				userInfo = self.clientObj.user_info_by_username(follower.username)
+				jsonRes[follower.username] = {"userInfoDict": userInfo,"isMutuals": True}
+
 				self.helpersObj.Default.printSuccess(f"found {mutualCount} mutual accounts!")
-				time.sleep(0.10) # this is purely for looks lmao
+				time.sleep(random.randint(5, 15)) # this is purely for looks lmao
 				print ("\033[A\033[A")
 		print("\n")
 
@@ -141,15 +139,20 @@ class tools():
 	def crossReferencePostsLikers(self, targetPK: str, tarMutuals: str) -> json:
 		jsonRes = {}
 		mutualLikerCount = 0
+		mutualTagsCount = 0
+		# get the target's posts
 		targetMedias = self.clientObj.user_medias_gql(targetPK, 5)
   
+		# check if the target has any posts
 		if targetMedias == []:
-			self.helpersObj.Default.printSuccess(f"No posts found. Exiting...")
-			exit(0)
+			return None
+
 
 		userTagsRes = {}
+		# for each post, get the user tags and store it
 		for media in targetMedias:
 			for mediaTag in media.usertags:
+				mutualTagsCount += 1
 				userTagsRes[mediaTag.username] = {"userPK": mediaTag.pk, "mediaPK": mediaTag.pk}
    
 		for media in targetMedias:
@@ -167,25 +170,36 @@ class tools():
 						print ("\033[A\033[A")
 		print("\n")
 
-		return {"mutualLikers": jsonRes, "mutualLikerCount": mutualLikerCount, "userTags":userTagsRes}
+		return {"mutualLikers": jsonRes, "mutualLikerCount": mutualLikerCount, "userTags":userTagsRes, "mutualTagsCount": mutualTagsCount}
 
 
 
+	def pharseMisc(self, mutualToPharse: json) -> json:
+		jsonRes = {}
 
-
-
-
+		for mutualUsername, account_data in mutualToPharse.items():
+			userInfoDict = account_data["userInfoDict"]
+			userInfo = self.pharseBios(userInfoDict.biography)
+			jsonRes[mutualUsername] = {"userInfo": userInfo}
+			time.sleep(random.randint(5, 10))
+		return jsonRes
 
 
 	def pharseBios(self, userBio: str) -> json:
-		
-		nlp = spacy.load("en_core_web_sm")
+		"""This handles the pharsing of the user's bio to check for ages, places, names, schools ect. using spaCy
 
+		Args:
+			userBio (str): the users bio to be pharsed
+
+		Returns:
+			json: json response of the pharsed bio data
+		"""
+		# load the en lib
+		nlp = spacy.load("en_core_web_sm")
 		# Process the bio text using spaCy
 		doc = nlp(userBio)
-		
-		age_pattern = r'\b\d{1,2}\b'  # Matches numbers with 1 or 2 digits
-
+		# Matches numbers with 1 or 2 digits
+		age_pattern = r'\b\d{1,2}\b'  
 		# Initialize lists to store extracted entities
 		counties = []
 		abbreviations = []
@@ -202,11 +216,44 @@ class tools():
     
 		ages = re.findall(age_pattern, userBio)
   
-		return counties, abbreviations, schools, ages
+		return {"counties": counties, "abbreviations": abbreviations, "schools":schools, "ages": ages}
 
 
 
+	def calcRating(self, mutuals: json, mutualLikers: json) -> json:
+		mutualsCount = mutuals["mutualCount"]
+		mutualLikersCount = mutualLikers["mutualLikerCount"]
+		
+		match mutualsCount:
+			case 0:
+				mutualsCountRating = 0
+			case x if x >= 90:
+				mutualsCountRating = 50
+			case x if x >= 50:
+				mutualsCountRating = 35
+			case x if x >= 35:
+				mutualsCountRating = 25
+			case x if x >= 20:
+				mutualsCountRating = 15
+			case x if x >= 5:
+				mutualsCountRating = 5
 
+		match mutualLikersCount:
+			case 0:
+				mutualLikersRating = 0
+			case x if x >= 90:
+				mutualLikersRating = 50
+			case x if x >= 50:
+				mutualLikersRating = 35
+			case x if x >= 35:
+				mutualLikersRating = 25
+			case x if x >= 20:
+				mutualLikersRating = 25
+			case x if x >= 5:
+				mutualLikersRating = 5
+
+		return mutualsCountRating + mutualLikersRating 
+	
 	def handlePrivateStatus(self, tarInfo: str) -> bool:
 		"""Handles a target private acc
 

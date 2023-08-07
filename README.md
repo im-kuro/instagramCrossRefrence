@@ -8,7 +8,10 @@ use this tool to see what mutuals they have. If they have a lot of mutuals, they
 real and you can use thoes mutals for more OSINT.
 
 
-
+## Please note
+- Yes, its slow. But this is because instagram has tighend up their API so rate limits are common. if you happen to be rate limited just wait 12 hours and try again. If it still persists, try using a VPN thats not public or residential proxies. **Along with using -f to fix the saved session settings!!**
+- Yes i know the data flow is shitty, i plan to get a working version out first then clean it up.
+- If you have any code suggestions please open a pull request, i would love to see what you have to add.
 
 ## Installation
 Download the code from github

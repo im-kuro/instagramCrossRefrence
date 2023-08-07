@@ -28,29 +28,38 @@ def main(tarUsername: str) -> bool:
  	# sleep to avoid ratelimit
 	time.sleep(random.randint(10, 15))
 
-	# find mutals | 25 points
+	# find mutals | 50 points
 	mutuals = toolkitObj.crossReferenceAccounts(tarInfo.pk)
 	
 	time.sleep(random.randint(10, 15))
  
-	# cross refrence likers of posts & tags in thoes posts | 25 points
+	# cross refrence likers of posts & tags in thoes posts | 50 points
 	tarPostLikers = toolkitObj.crossReferencePostsLikers(tarInfo.pk, mutuals)
-	print(tarPostLikers)
+	
+	# if this returns false then there are no posts to cross refrence
+	if not tarPostLikers:
+		helpersObj.Default.printError("No posts found on target account, exiting...")
 
-	# cross refrence tags | 25 points
 
+	# pharse accounts bio & hashtags for info & checking for common last names & cross refrence tags  | 50 points
+	commonQ = toolkitObj.pharseMisc(mutuals["mutuals"])
 
-
-	# pharse accounts bio & hashtags for info & checking for common last names | 25 points
- 
- 
+	
+	Rating = toolkitObj.calcRating(mutuals, tarPostLikers)
 
 	# give rating on how real the account is
-	#rating = mutuals["rate"] + tarPostLikers["rate"]
-	#print(Fore.YELLOW + f"[Result] This account is most likely fake, if there where any mutuals found you can manually check them and the leads. {Fore.RED}RATING: {rating}% ")
-	#elif x+z+y+q >= 50:
-
-
+	if Rating <= 0 and Rating >= 40 :
+		print(Fore.YELLOW + f"[Result] This account is most likely fake. {Fore.RED}RATING: {Rating}% ")
+	elif Rating <= 40 and Rating >= 60:
+		print(Fore.YELLOW + f"[Result] This account is less likely not fake. {Fore.RED}RATING: {Rating}% ")
+	elif Rating <= 60 and Rating >= 100:
+		print(Fore.GREEN + f"[Result] This account is most likely real. {Fore.RED}RATING: {Rating}% ")
+	else:
+		print(Fore.YELLOW + f" + [Result] {Fore.RED}RATING: {Rating}% ")
+  
+	outputLeads = helpersObj.Default.getUserInput("would you like to see the details of the leads?")	
+	print("Coming Soon (:")
+ 
 
 
 if __name__ == '__main__':
@@ -59,6 +68,7 @@ if __name__ == '__main__':
 		os.system('cls')
 	else:
 		os.system('clear')
+  
 	# init wrapper
 	clientObj = Client()
     # mainly for input/output
